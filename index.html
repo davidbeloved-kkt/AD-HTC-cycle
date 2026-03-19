@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="Interactive thermodynamic analysis of the AD-HTC Fuel-Enhanced Gas Power Cycle with real-time Brayton cycle calculations, H-S and T-S diagrams." />
+  <title>AD-HTC Fuel-Enhanced Gas Power Cycle Analyzer</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+
+  <div class="app-container">
+
+    <!-- ===== HEADER ===== -->
+    <header class="header">
+      <div class="header__badge">● Thermodynamic Analysis Suite</div>
+      <h1 class="header__title">AD-HTC Fuel-Enhanced Gas Power Cycle</h1>
+      <p class="header__subtitle">Interactive Brayton cycle analysis with integrated Anaerobic Digestion & Hydrothermal
+        Carbonization subsystems</p>
+    </header>
+
+    <!-- ===== MAIN GRID: Schematic + Sidebar ===== -->
+    <div class="main-grid">
+
+      <!-- Schematic (SVG Block Diagram) -->
+      <div class="schematic-container" id="schematicDiagram">
+        <svg viewBox="0 0 960 720" xmlns="http://www.w3.org/2000/svg" class="schematic-svg">
+          <defs>
+            <!-- Arrowhead marker -->
+            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+              orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 Z" fill="#22d3ee" />
+            </marker>
+            <marker id="arrow-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6"
+              orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 Z" fill="#64748b" />
+            </marker>
+          </defs>
+
+          <!-- ====== ROW 1: Biomass Feedstock → Homogenizer → AD ====== -->
+
+          <!-- "Biomass Feedstock" label -->
+          <text x="48" y="78" class="svg-label" text-anchor="middle">Biomass</text>
+          <text x="48" y="96" class="svg-label" text-anchor="middle">Feedstock</text>
+
+          <!-- Arrow: Feedstock → Homogenizer -->
+          <line x1="90" y1="85" x2="138" y2="85" class="svg-flow-line" marker-end="url(#arrow)" />
+
+          <!-- Biomass Feedstock Homogenizer box -->
+          <rect x="140" y="55" width="160" height="60" rx="4" class="svg-block" />
+          <text x="220" y="82" class="svg-block-label" text-anchor="middle">Biomass Feedstock</text>
+          <text x="220" y="100" class="svg-block-label" text-anchor="middle">Homogenizer</text>
+
+          <!-- Arrow: Homogenizer → AD (long horizontal, with label) -->
+          <line x1="300" y1="85" x2="748" y2="85" class="svg-flow-line" marker-end="url(#arrow)" />
+          <text x="525" y="72" class="svg-flow-label" text-anchor="middle">Moisture-rich Biomass Feedstock</text>
+
+          <!-- AD box -->
+          <rect x="750" y="55" width="100" height="60" rx="4" class="svg-block" />
+          <text x="800" y="90" class="svg-block-label" text-anchor="middle">AD</text>
+
+          <!-- ====== Arrow: Homogenizer down → "Moisture-lean Biomass Feedstock" ====== -->
+          <line x1="220" y1="115" x2="220" y2="220" class="svg-flow-line" marker-end="url(#arrow)" />
+          <text x="232" y="155" class="svg-flow-label" text-anchor="start">Moisture-lean</text>
+          <text x="232" y="171" class="svg-flow-label" text-anchor="start">Biomass Feedstock</text>
+
+          <!-- ====== ROW 2: Boiler ↔ HTC Steam Cycle ↔ Reactor → Enhanced Biogas Collector ====== -->
+
+          <!-- Boiler box -->
+          <rect x="120" y="225" width="120" height="55" rx="4" class="svg-block" />
+          <text x="180" y="258" class="svg-block-label" text-anchor="middle">Boiler</text>
+
+          <!-- HTC Steam Cycle label -->
+          <text x="340" y="218" class="svg-zone-label" text-anchor="middle">HTC Steam Cycle</text>
+
+          <!-- Steam cycle loop: Boiler top → right, down, left to Reactor top -->
+          <line x1="180" y1="225" x2="180" y2="200" class="svg-flow-line-thin" />
+          <line x1="180" y1="200" x2="410" y2="200" class="svg-flow-line-thin" marker-end="url(#arrow-muted)" />
+          <text x="295" y="194" class="svg-flow-label-sm" text-anchor="middle">Steam</text>
+
+          <!-- Pump circle on steam line -->
+          <circle cx="295" cy="200" r="8" class="svg-pump" />
+          <line x1="289" y1="200" x2="301" y2="200" class="svg-pump-line" />
+
+          <!-- Reactor box -->
+          <rect x="350" y="255" width="120" height="55" rx="4" class="svg-block" />
+          <text x="410" y="288" class="svg-block-label" text-anchor="middle">Reactor</text>
+
+          <!-- Boiler → Reactor line (bottom) -->
+          <line x1="240" y1="280" x2="348" y2="280" class="svg-flow-line" marker-end="url(#arrow)" />
+
+          <!-- Reactor top connection (steam return) -->
+          <line x1="410" y1="255" x2="410" y2="208" class="svg-flow-line-thin" />
+
+          <!-- Reactor → Enhanced Biogas Collector -->
+          <line x1="470" y1="280" x2="558" y2="280" class="svg-flow-line" marker-end="url(#arrow)" />
+
+          <!-- Enhanced Biogas Collector box -->
+          <rect x="560" y="230" width="130" height="100" rx="4" class="svg-block svg-block--tall" />
+          <text x="625" y="272" class="svg-block-label" text-anchor="middle">Enhanced</text>
+          <text x="625" y="290" class="svg-block-label" text-anchor="middle">Biogas</text>
+          <text x="625" y="308" class="svg-block-label" text-anchor="middle">Collector</text>
+
+          <!-- AD → Enhanced Biogas Collector (arrow going down) -->
+          <line x1="800" y1="115" x2="800" y2="180" class="svg-flow-line" />
+          <line x1="800" y1="180" x2="625" y2="180" class="svg-flow-line" />
+          <line x1="625" y1="180" x2="625" y2="228" class="svg-flow-line" marker-end="url(#arrow)" />
+
+          <!-- Enhanced Biogas Collector → "Biogas Distribution to Building Envelopes" -->
+          <line x1="690" y1="280" x2="760" y2="280" class="svg-flow-line" marker-end="url(#arrow)" />
+          <text x="772" y="266" class="svg-flow-label" text-anchor="start">Biogas</text>
+          <text x="772" y="282" class="svg-flow-label" text-anchor="start">Distribution to</text>
+          <text x="772" y="298" class="svg-flow-label" text-anchor="start">Building Envelopes</text>
+
+          <!-- ====== Arrow: Reactor down → "Volatile Matters" → Combustion Chamber ====== -->
+          <line x1="410" y1="310" x2="410" y2="405" class="svg-flow-line" marker-end="url(#arrow)" />
+          <text x="422" y="350" class="svg-flow-label" text-anchor="start">Volatile Matters</text>
+          <text x="422" y="366" class="svg-flow-label" text-anchor="start">and Feedstock Waste</text>
+
+          <!-- ====== ROW 3: Biogas Combustion Chamber ====== -->
+          <rect x="340" y="408" width="180" height="55" rx="4" class="svg-block svg-block--accent" />
+          <text x="430" y="432" class="svg-block-label" text-anchor="middle">Biogas Combustion</text>
+          <text x="430" y="450" class="svg-block-label" text-anchor="middle">Chamber</text>
+
+          <!-- Combustion Chamber → down to shaft -->
+          <line x1="430" y1="463" x2="430" y2="545" class="svg-flow-line" marker-end="url(#arrow)" />
+
+          <!-- ====== ROW 4: Compressor — Shaft — Turbine ====== -->
+
+          <!-- Shaft line (horizontal) -->
+          <line x1="230" y1="565" x2="720" y2="565" class="svg-shaft-line" />
+
+          <!-- Compressor (trapezoid - converging) -->
+          <polygon points="230,525 370,540 370,590 230,605" class="svg-turbomachine" />
+          <text x="300" y="570" class="svg-machine-label" text-anchor="middle">Compressor</text>
+
+          <!-- Turbine (trapezoid - diverging) -->
+          <polygon points="580,540 720,525 720,605 580,590" class="svg-turbomachine" />
+          <text x="650" y="570" class="svg-machine-label" text-anchor="middle">Turbine</text>
+
+          <!-- Arrow: "Air" into compressor from below -->
+          <line x1="300" y1="660" x2="300" y2="608" class="svg-flow-line" marker-end="url(#arrow)" />
+          <text x="300" y="680" class="svg-label" text-anchor="middle">Air</text>
+
+          <!-- Arrow: "Exhaust Gases" out of turbine to right -->
+          <line x1="722" y1="565" x2="800" y2="565" class="svg-flow-line" marker-end="url(#arrow)" />
+          <!-- Exhaust fan symbol -->
+          <path d="M800,555 L820,545 L820,585 L800,575 Z" class="svg-exhaust" />
+          <text x="760" y="625" class="svg-label" text-anchor="middle">Exhaust Gases</text>
+
+          <!-- ====== Title at bottom ====== -->
+          <text x="480" y="710" class="svg-title" text-anchor="middle">AD-HTC Fuel-Enhanced Gas Power Cycle
+            Schematic</text>
+        </svg>
+        <div class="schematic-label">▲ System Process Flow Diagram — AD-HTC Integrated Cycle</div>
+      </div>
+
+      <!-- Sidebar: Inputs -->
+      <aside class="sidebar">
+        <div class="input-panel">
+          <div class="section-title">Input Parameters</div>
+
+          <div class="input-group">
+            <label class="input-label" for="inputMdotAir">
+              Mass Flow Rate (Air)
+              <span class="input-label__unit">kg/s</span>
+            </label>
+            <input type="number" class="input-field" id="inputMdotAir" value="10" step="0.5" min="1" max="500"
+              placeholder="10" />
+            <div class="error-message"></div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="inputT1">
+              Ambient Temperature
+              <span class="input-label__unit">K</span>
+            </label>
+            <input type="number" class="input-field" id="inputT1" value="298.15" step="0.1" min="200" max="500"
+              placeholder="298.15" />
+            <div class="error-message"></div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="inputRP">
+              Compressor Pressure Ratio
+              <span class="input-label__unit">r<sub>p</sub></span>
+            </label>
+            <input type="number" class="input-field" id="inputRP" value="10" step="0.5" min="1.5" max="40"
+              placeholder="10" />
+            <div class="error-message"></div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="inputEtaC">
+              Isentropic Eff. (Compressor)
+              <span class="input-label__unit">η<sub>c</sub></span>
+            </label>
+            <input type="number" class="input-field" id="inputEtaC" value="0.85" step="0.01" min="0.5" max="1.0"
+              placeholder="0.85" />
+            <div class="error-message"></div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="inputEtaT">
+              Isentropic Eff. (Turbine)
+              <span class="input-label__unit">η<sub>t</sub></span>
+            </label>
+            <input type="number" class="input-field" id="inputEtaT" value="0.90" step="0.01" min="0.5" max="1.0"
+              placeholder="0.90" />
+            <div class="error-message"></div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="inputLHV">
+              Lower Heating Value (Biogas)
+              <span class="input-label__unit">kJ/kg</span>
+            </label>
+            <input type="number" class="input-field" id="inputLHV" value="18000" step="100" min="5000" max="60000"
+              placeholder="18000" />
+            <div class="error-message"></div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="inputT3">
+              Turbine Inlet Temp. (T3)
+              <span class="input-label__unit">K</span>
+            </label>
+            <input type="number" class="input-field" id="inputT3" value="1400" step="10" min="800" max="2500"
+              placeholder="1400" />
+            <div class="error-message"></div>
+          </div>
+
+          <button class="btn-analyze" id="analyzeBtn">⚡ Analyze System</button>
+        </div>
+      </aside>
+    </div>
+
+    <!-- ===== COMPONENT LIST ===== -->
+    <div class="section-title">Integrated System Components</div>
+    <div class="components-grid">
+      <div class="component-card">
+        <span class="component-card__icon">🌿</span>
+        <div class="component-card__name">Biomass Feedstock Homogenizer</div>
+        <div class="component-card__tag">PRE-PROCESS</div>
+      </div>
+      <div class="component-card">
+        <span class="component-card__icon">🔥</span>
+        <div class="component-card__name">Boiler</div>
+        <div class="component-card__tag">THERMAL</div>
+      </div>
+      <div class="component-card">
+        <span class="component-card__icon">♨️</span>
+        <div class="component-card__name">HTC Steam Cycle Reactor</div>
+        <div class="component-card__tag">HTC REACTOR</div>
+      </div>
+      <div class="component-card">
+        <span class="component-card__icon">💨</span>
+        <div class="component-card__name">Enhanced Biogas Collector</div>
+        <div class="component-card__tag">GAS CAPTURE</div>
+      </div>
+      <div class="component-card">
+        <span class="component-card__icon">🦠</span>
+        <div class="component-card__name">Anaerobic Digester (AD)</div>
+        <div class="component-card__tag">DIGESTION</div>
+      </div>
+      <div class="component-card">
+        <span class="component-card__icon">🔴</span>
+        <div class="component-card__name">Biogas Combustion Chamber</div>
+        <div class="component-card__tag">COMBUSTION</div>
+      </div>
+      <div class="component-card">
+        <span class="component-card__icon">🔧</span>
+        <div class="component-card__name">Compressor</div>
+        <div class="component-card__tag">COMPRESSION</div>
+      </div>
+      <div class="component-card">
+        <span class="component-card__icon">⚙️</span>
+        <div class="component-card__name">Gas Turbine</div>
+        <div class="component-card__tag">EXPANSION</div>
+      </div>
+    </div>
+
+    <!-- ===== RESULTS SECTION ===== -->
+    <div id="resultsSection" class="results-section">
+
+      <!-- Performance Metrics -->
+      <div class="section-title">Performance Metrics</div>
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-card__label">Compressor Power</div>
+          <div class="metric-card__value" id="metricPcomp">—</div>
+          <div class="metric-card__unit">kW</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-card__label">Air / Fuel Ratio</div>
+          <div class="metric-card__value" id="metricAF">—</div>
+          <div class="metric-card__unit">kg<sub>air</sub>/kg<sub>fuel</sub></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-card__label">Turbine Power</div>
+          <div class="metric-card__value" id="metricPturb">—</div>
+          <div class="metric-card__unit">kW</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-card__label">Net Output Power</div>
+          <div class="metric-card__value" id="metricPnet">—</div>
+          <div class="metric-card__unit">kW</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-card__label">Thermal Efficiency</div>
+          <div class="metric-card__value" id="metricEta">—</div>
+          <div class="metric-card__unit">%</div>
+        </div>
+      </div>
+
+      <!-- State Table -->
+      <div class="section-title">State Point Data</div>
+      <div class="table-container">
+        <table class="state-table">
+          <thead>
+            <tr>
+              <th>State</th>
+              <th>Pressure (kPa)</th>
+              <th>Temperature (K)</th>
+              <th>Enthalpy (kJ/kg)</th>
+              <th>Entropy (kJ/kg·K)</th>
+            </tr>
+          </thead>
+          <tbody id="stateTableBody">
+            <!-- Filled by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Charts -->
+      <div class="section-title">Thermodynamic Diagrams</div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-card__title"><span>📊</span> H-S Diagram (Enthalpy–Entropy)</div>
+          <div class="chart-wrapper">
+            <canvas id="chartHS"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card__title"><span>📈</span> T-S Diagram (Temperature–Entropy)</div>
+          <div class="chart-wrapper">
+            <canvas id="chartTS"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      AD-HTC Fuel-Enhanced Gas Power Cycle Analyzer &middot; Thermodynamic Analysis Suite &middot; 2026
+    </footer>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
