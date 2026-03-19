@@ -4,15 +4,9 @@
    ======================================== */
 
 // --- Constants ---
-const GAMMA = 1.4;                // Ratio of specific heats for air
-const CP = 1.005;                 // Specific heat at constant pressure (kJ/kg·K)
-const CV = CP / GAMMA;            // Specific heat at constant volume (kJ/kg·K)
-const R_AIR = CP - CV;            // Gas constant for air (kJ/kg·K)
-
 // Reference state for entropy calculation
 const T_REF = 298.15;             // Reference temperature (K)
 const P_REF = 101.325;            // Reference pressure (kPa)
-const H_REF = CP * T_REF;        // Reference enthalpy (kJ/kg)
 const S_REF = 0;                  // Reference entropy (kJ/kg·K)
 
 // --- Chart instances ---
@@ -71,10 +65,14 @@ function readInputs() {
   const fields = {
     mdotAir: { id: 'inputMdotAir', min: 0.1, max: 1000, name: 'Mass Flow Rate' },
     T1: { id: 'inputT1', min: 200, max: 500, name: 'Ambient Temperature' },
+    P1: { id: 'inputP1', min: 50, max: 500, name: 'Ambient Pressure' },
     rp: { id: 'inputRP', min: 1.5, max: 40, name: 'Pressure Ratio' },
     etaC: { id: 'inputEtaC', min: 0.5, max: 1.0, name: 'Compressor Efficiency' },
     etaT: { id: 'inputEtaT', min: 0.5, max: 1.0, name: 'Turbine Efficiency' },
+    etaCC: { id: 'inputEtaCC', min: 0.5, max: 1.0, name: 'Combustion Efficiency' },
     LHV: { id: 'inputLHV', min: 5000, max: 60000, name: 'LHV' },
+    Cp: { id: 'inputCp', min: 0.5, max: 2.5, name: 'Specific Heat' },
+    gamma: { id: 'inputGamma', min: 1.1, max: 1.7, name: 'Specific Heat Ratio' },
     T3: { id: 'inputT3', min: 800, max: 2500, name: 'Turbine Inlet Temp' },
   };
 
@@ -107,63 +105,65 @@ function clearErrors() {
 }
 
 // --- Thermodynamic Calculations ---
-function calculateCycle({ mdotAir, T1, rp, etaC, etaT, LHV, T3 }) {
-  const P1 = 101.325;  // Ambient pressure (kPa)
+function calculateCycle({ mdotAir, T1, P1, rp, etaC, etaT, etaCC, LHV, Cp, gamma, T3 }) {
+  // Gas properties dynamically parsed from inputs
+  const cp = Cp;
+  const cv = cp / gamma;
+  const R_gas = cp - cv;
 
   // ====== STATE 1: Compressor Inlet (Ambient) ======
-  const h1 = CP * T1;
-  const s1 = calcEntropy(T1, P1);
+  const h1 = cp * T1;
+  const s1 = calcEntropy(T1, P1, cp, R_gas);
 
   // ====== STATE 2: Compressor Outlet ======
   const P2 = P1 * rp;
 
   // Isentropic compressor outlet temperature
-  const T2s = T1 * Math.pow(rp, (GAMMA - 1) / GAMMA);
+  const T2s = T1 * Math.pow(rp, (gamma - 1) / gamma);
 
-  // Actual compressor outlet temperature (accounting for efficiency)
+  // Actual compressor outlet temperature (accounting for inefficiency)
   const T2 = T1 + (T2s - T1) / etaC;
-  const h2 = CP * T2;
-  const s2 = calcEntropy(T2, P2);
+  const h2 = cp * T2;
+  const s2 = calcEntropy(T2, P2, cp, R_gas);
 
   // Specific compressor work (kJ/kg)
-  const w_comp = h2 - h1;
+  const w_comp = cp * (T2 - T1);
   const P_comp = mdotAir * w_comp;
 
   // ====== STATE 3: Combustion Chamber Outlet / Turbine Inlet ======
   const P3 = P2;  // Constant-pressure combustion
 
   // User directly inputs T3 for turbine inlet
-  const h3 = CP * T3;
-  const s3 = calcEntropy(T3, P3);
+  const h3 = cp * T3;
+  const s3 = calcEntropy(T3, P3, cp, R_gas);
 
-  // Recalculate exact A/F ratio based on energy balance
-  const AF = (LHV - CP * T3) / (CP * (T3 - T2));
-  const mdotFuel = mdotAir / AF;
+  // Recalculate exact fuel mass flow rate based on energy balance
+  const heatSensible = cp * (T3 - T2);
+  const mdotFuel = (mdotAir * heatSensible) / (LHV * etaCC - heatSensible);
+  const AF = mdotAir / mdotFuel;
   const mdotTotal = mdotAir + mdotFuel;
 
   // ====== STATE 4: Turbine Outlet ======
   const P4 = P1;  // Exhaust to ambient
 
   // Isentropic turbine outlet temperature
-  const T4s = T3 * Math.pow(1 / rp, (GAMMA - 1) / GAMMA);
+  const T4s = T3 / Math.pow(rp, (gamma - 1) / gamma);
 
-  // Actual turbine outlet temperature
+  // Actual turbine outlet temperature accounting for inefficiency
   const T4 = T3 - etaT * (T3 - T4s);
-  const h4 = CP * T4;
-  const s4 = calcEntropy(T4, P4);
+  const h4 = cp * T4;
+  const s4 = calcEntropy(T4, P4, cp, R_gas);
 
   // Specific turbine work (kJ/kg) and Power (kW)
-  const w_turb = h3 - h4;
+  const w_turb = cp * (T3 - T4);
   const P_turb = mdotTotal * w_turb;
 
-  // Net Output Power
-  const P_net = P_turb - P_comp;
-
-  // Total thermal input (kW)
-  const Q_total = mdotFuel * LHV;
+  // Net Specific Work and Output Power calculation
+  const w_net = w_turb - w_comp;
+  const P_net = mdotTotal * w_net;
 
   // Thermal efficiency
-  const eta_th = (P_net / Q_total) * 100;
+  const eta_th = (w_net / heatSensible) * 100;
 
   // Build state points array
   const states = [
@@ -187,8 +187,8 @@ function calculateCycle({ mdotAir, T1, rp, etaC, etaT, LHV, T3 }) {
 
 // --- Entropy Calculation ---
 // s - s_ref = CP * ln(T/T_ref) - R * ln(P/P_ref)
-function calcEntropy(T, P) {
-  return S_REF + CP * Math.log(T / T_REF) - R_AIR * Math.log(P / P_REF);
+function calcEntropy(T, P, cp, R_gas) {
+  return S_REF + cp * Math.log(T / T_REF) - R_gas * Math.log(P / P_REF);
 }
 
 // --- Display Results ---

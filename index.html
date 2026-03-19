@@ -179,8 +179,18 @@
               Ambient Temperature
               <span class="input-label__unit">K</span>
             </label>
-            <input type="number" class="input-field" id="inputT1" value="298.15" step="0.1" min="200" max="500"
-              placeholder="298.15" />
+            <input type="number" class="input-field" id="inputT1" value="300" step="0.1" min="200" max="500"
+              placeholder="300" />
+            <div class="error-message"></div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="inputP1">
+              Ambient Pressure
+              <span class="input-label__unit">kPa</span>
+            </label>
+            <input type="number" class="input-field" id="inputP1" value="101.325" step="0.001" min="50" max="500"
+              placeholder="101.325" />
             <div class="error-message"></div>
           </div>
 
@@ -199,8 +209,8 @@
               Isentropic Eff. (Compressor)
               <span class="input-label__unit">η<sub>c</sub></span>
             </label>
-            <input type="number" class="input-field" id="inputEtaC" value="0.85" step="0.01" min="0.5" max="1.0"
-              placeholder="0.85" />
+            <input type="number" class="input-field" id="inputEtaC" value="0.70" step="0.01" min="0.5" max="1.0"
+              placeholder="0.70" />
             <div class="error-message"></div>
           </div>
 
@@ -209,8 +219,18 @@
               Isentropic Eff. (Turbine)
               <span class="input-label__unit">η<sub>t</sub></span>
             </label>
-            <input type="number" class="input-field" id="inputEtaT" value="0.90" step="0.01" min="0.5" max="1.0"
-              placeholder="0.90" />
+            <input type="number" class="input-field" id="inputEtaT" value="0.88" step="0.01" min="0.5" max="1.0"
+              placeholder="0.88" />
+            <div class="error-message"></div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="inputEtaCC">
+              Combustion Eff.
+              <span class="input-label__unit">η<sub>cc</sub></span>
+            </label>
+            <input type="number" class="input-field" id="inputEtaCC" value="0.98" step="0.01" min="0.5" max="1.0"
+              placeholder="0.98" />
             <div class="error-message"></div>
           </div>
 
@@ -225,12 +245,32 @@
           </div>
 
           <div class="input-group">
+            <label class="input-label" for="inputCp">
+              Specific Heat of Gas
+              <span class="input-label__unit">kJ/(kg·K)</span>
+            </label>
+            <input type="number" class="input-field" id="inputCp" value="1.005" step="0.001" min="0.5" max="2.5"
+              placeholder="1.005" />
+            <div class="error-message"></div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="inputGamma">
+              Specific Heat Ratio
+              <span class="input-label__unit">γ</span>
+            </label>
+            <input type="number" class="input-field" id="inputGamma" value="1.4" step="0.01" min="1.1" max="1.7"
+              placeholder="1.4" />
+            <div class="error-message"></div>
+          </div>
+
+          <div class="input-group">
             <label class="input-label" for="inputT3">
               Turbine Inlet Temp. (T3)
               <span class="input-label__unit">K</span>
             </label>
-            <input type="number" class="input-field" id="inputT3" value="1400" step="10" min="800" max="2500"
-              placeholder="1400" />
+            <input type="number" class="input-field" id="inputT3" value="1273.15" step="10" min="800" max="2500"
+              placeholder="1273.15" />
             <div class="error-message"></div>
           </div>
 
