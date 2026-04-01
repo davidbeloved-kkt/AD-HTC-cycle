@@ -4,10 +4,7 @@
    ======================================== */
 
 // --- Constants ---
-// Reference state for entropy calculation
-const T_REF = 298.15;             // Reference temperature (K)
-const P_REF = 101.325;            // Reference pressure (kPa)
-const S_REF = 0;                  // Reference entropy (kJ/kg·K)
+// Thermodynamic constants have been moved to backend
 
 // --- Chart instances ---
 let hsChart = null;
@@ -28,7 +25,7 @@ document.querySelectorAll('.input-field').forEach(input => {
 });
 
 // --- Main Analysis Function ---
-function runAnalysis() {
+async function runAnalysis() {
   // Clear previous errors
   clearErrors();
 
@@ -40,24 +37,21 @@ function runAnalysis() {
   analyzeBtn.classList.add('loading');
   analyzeBtn.textContent = 'Analyzing...';
 
-  // Simulate slight delay for UX
-  setTimeout(() => {
-    try {
-      const results = calculateCycle(inputs);
-      displayResults(results);
-      renderCharts(results);
-      resultsSection.classList.add('visible');
+  try {
+    const results = await calculateCycle(inputs);
+    displayResults(results);
+    renderCharts(results);
+    resultsSection.classList.add('visible');
 
-      // Scroll to results
-      resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } catch (err) {
-      console.error('Calculation error:', err);
-      alert('Calculation error: ' + err.message);
-    } finally {
-      analyzeBtn.classList.remove('loading');
-      analyzeBtn.textContent = '⚡ Analyze System';
-    }
-  }, 400);
+    // Scroll to results
+    resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (err) {
+    console.error('Calculation error:', err);
+    alert('Calculation error: ' + err.message);
+  } finally {
+    analyzeBtn.classList.remove('loading');
+    analyzeBtn.textContent = '⚡ Analyze System';
+  }
 }
 
 // --- Input Reading & Validation ---
@@ -105,90 +99,20 @@ function clearErrors() {
 }
 
 // --- Thermodynamic Calculations ---
-function calculateCycle({ mdotAir, T1, P1, rp, etaC, etaT, etaCC, LHV, Cp, gamma, T3 }) {
-  // Gas properties dynamically parsed from inputs
-  const cp = Cp;
-  const cv = cp / gamma;
-  const R_gas = cp - cv;
-
-  // ====== STATE 1: Compressor Inlet (Ambient) ======
-  const h1 = cp * T1;
-  const s1 = calcEntropy(T1, P1, cp, R_gas);
-
-  // ====== STATE 2: Compressor Outlet ======
-  const P2 = P1 * rp;
-
-  // Isentropic compressor outlet temperature
-  const T2s = T1 * Math.pow(rp, (gamma - 1) / gamma);
-
-  // Actual compressor outlet temperature (accounting for inefficiency)
-  const T2 = T1 + (T2s - T1) / etaC;
-  const h2 = cp * T2;
-  const s2 = calcEntropy(T2, P2, cp, R_gas);
-
-  // Specific compressor work (kJ/kg)
-  const w_comp = cp * (T2 - T1);
-  const P_comp = mdotAir * w_comp;
-
-  // ====== STATE 3: Combustion Chamber Outlet / Turbine Inlet ======
-  const P3 = P2;  // Constant-pressure combustion
-
-  // User directly inputs T3 for turbine inlet
-  const h3 = cp * T3;
-  const s3 = calcEntropy(T3, P3, cp, R_gas);
-
-  // Recalculate exact fuel mass flow rate based on energy balance
-  const heatSensible = cp * (T3 - T2);
-  const mdotFuel = (mdotAir * heatSensible) / (LHV * etaCC - heatSensible);
-  const AF = mdotAir / mdotFuel;
-  const mdotTotal = mdotAir + mdotFuel;
-
-  // ====== STATE 4: Turbine Outlet ======
-  const P4 = P1;  // Exhaust to ambient
-
-  // Isentropic turbine outlet temperature
-  const T4s = T3 / Math.pow(rp, (gamma - 1) / gamma);
-
-  // Actual turbine outlet temperature accounting for inefficiency
-  const T4 = T3 - etaT * (T3 - T4s);
-  const h4 = cp * T4;
-  const s4 = calcEntropy(T4, P4, cp, R_gas);
-
-  // Specific turbine work (kJ/kg) and Power (kW)
-  const w_turb = cp * (T3 - T4);
-  const P_turb = mdotTotal * w_turb;
-
-  // Net Specific Work and Output Power calculation
-  const w_net = w_turb - w_comp;
-  const P_net = mdotTotal * w_net;
-
-  // Thermal efficiency
-  const eta_th = (w_net / heatSensible) * 100;
-
-  // Build state points array
-  const states = [
-    { state: 1, label: 'Compressor Inlet', P: P1, T: T1, h: h1, s: s1 },
-    { state: 2, label: 'Compressor Outlet', P: P2, T: T2, h: h2, s: s2 },
-    { state: 3, label: 'Turbine Inlet', P: P3, T: T3, h: h3, s: s3 },
-    { state: 4, label: 'Turbine Outlet', P: P4, T: T4, h: h4, s: s4 },
-  ];
-
-  return {
-    states,
-    metrics: {
-      P_comp,
-      AF,
-      P_turb,
-      P_net,
-      eta_th,
+async function calculateCycle(inputs) {
+  const response = await fetch('http://localhost:8000/api/calculate', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
     },
-  };
-}
+    body: JSON.stringify(inputs),
+  });
 
-// --- Entropy Calculation ---
-// s - s_ref = CP * ln(T/T_ref) - R * ln(P/P_ref)
-function calcEntropy(T, P, cp, R_gas) {
-  return S_REF + cp * Math.log(T / T_REF) - R_gas * Math.log(P / P_REF);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  return await response.json();
 }
 
 // --- Display Results ---
