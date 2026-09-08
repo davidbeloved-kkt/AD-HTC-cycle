@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Biogas Rate &amp; Yield Estimator</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Biogas rate &amp; yield estimator</h1>
+    <p>
+      Estimates cumulative biogas volume and production rate from a first-order
+      digestion-kinetics model. The model is solved on the server (Euler and
+      4th-order Runge&#8211;Kutta) and checked against its closed-form analytical
+      solution. Enter the digestion parameters and run the model to see the
+      results and the numerical accuracy plot.
+    </p>
+  </header>
+
+  <div class="layout">
+
+    <div class="panel">
+      <p class="panel-title">Input parameters</p>
+
+      <div class="field">
+        <label>Ultimate biogas potential, V<sub>&infin;</sub> <span class="unit">m&sup3;</span></label>
+        <input type="number" id="in-vinf" value="27" step="0.1" min="0.0001" />
+        <p class="hint">Maximum cumulative volume the digester will yield as time &rarr; &infin;.</p>
+      </div>
+
+      <div class="field">
+        <label>Kinetic rate constant, k <span class="unit">day&#8315;&#185;</span></label>
+        <input type="number" id="in-k" value="0.0921" step="0.0001" min="0.00001" />
+        <p class="hint">Governs how quickly production approaches V<sub>&infin;</sub>: dV/dt = k(V<sub>&infin;</sub>&minus;V).</p>
+      </div>
+
+      <div class="field">
+        <label>Digestion period <span class="unit">days</span></label>
+        <input type="number" id="in-tend" value="25" step="1" min="1" />
+        <p class="hint">Total time horizon over which the model is run.</p>
+      </div>
+
+      <div class="field">
+        <label>Time step, h <span class="unit">days</span></label>
+        <input type="number" id="in-h" value="1" step="0.1" min="0.01" />
+        <p class="hint">Step size used by the Euler and Runge&#8211;Kutta integrators. Smaller h &rarr; higher accuracy, more steps.</p>
+      </div>
+
+      <button id="run-btn">Run model</button>
+      <p class="error-msg" id="error-msg"></p>
+    </div>
+
+    <div>
+
+      <div class="panel">
+        <p class="panel-title">Results</p>
+        <div class="readouts">
+          <div class="readout accent">
+            <div class="label">Total quantity produced</div>
+            <div class="value" id="out-total">&mdash; <span class="sub">m&sup3;</span></div>
+          </div>
+          <div class="readout accent">
+            <div class="label">Average production rate</div>
+            <div class="value" id="out-avgrate">&mdash; <span class="sub">m&sup3;/day</span></div>
+          </div>
+          <div class="readout">
+            <div class="label">Instantaneous rate at end of period</div>
+            <div class="value" id="out-endrate">&mdash; <span class="sub">m&sup3;/day</span></div>
+          </div>
+          <div class="readout good">
+            <div class="label">Max numerical error (RK4 vs analytical)</div>
+            <div class="value" id="out-rk4err">&mdash; <span class="sub">%</span></div>
+          </div>
+        </div>
+
+        <div class="chart-block">
+          <p class="chart-title">Cumulative biogas volume</p>
+          <p class="chart-sub">Numerical solutions (Euler, Runge&#8211;Kutta) overlaid on the analytical curve V(t) = V<sub>&infin;</sub>(1&minus;e<sup>&minus;kt</sup>)</p>
+          <canvas id="chart-volume" height="280"></canvas>
+          <div class="legend" id="legend-volume"></div>
+        </div>
+
+        <div class="chart-block">
+          <p class="chart-title">Model accuracy</p>
+          <p class="chart-sub">Relative error of each numerical method against the analytical solution, at every time step</p>
+          <canvas id="chart-error" height="240"></canvas>
+          <div class="legend" id="legend-error"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <p class="panel-title">Step-by-step output</p>
+        <div style="max-height:280px; overflow:auto;">
+          <table class="data-table" id="data-table">
+            <thead>
+              <tr>
+                <th>t (day)</th>
+                <th>Analytical (m&sup3;)</th>
+                <th>Euler (m&sup3;)</th>
+                <th>Euler err (%)</th>
+                <th>RK4 (m&sup3;)</th>
+                <th>RK4 err (%)</th>
+              </tr>
+            </thead>
+            <tbody id="data-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

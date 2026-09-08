@@ -1,0 +1,170 @@
+  :root{
+    --bg:#0B1D1E;
+    --panel:#12282A;
+    --panel-2:#173033;
+    --border:#234143;
+    --text:#E7F0EE;
+    --text-dim:#7FA39D;
+    --amber:#E8A33D;
+    --green:#6FBF8B;
+    --red:#D9694F;
+    --mono:'Courier New', ui-monospace, monospace;
+    --sans:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    min-height:100vh;
+    padding:32px 24px 64px;
+  }
+  .wrap{max-width:1180px; margin:0 auto;}
+
+  header{margin-bottom:28px;}
+  header h1{
+    font-size:22px;
+    font-weight:600;
+    margin:0 0 6px;
+    letter-spacing:0.01em;
+  }
+  header p{
+    color:var(--text-dim);
+    font-size:14px;
+    line-height:1.6;
+    margin:0;
+    max-width:74ch;
+  }
+
+  .layout{
+    display:grid;
+    grid-template-columns: 320px 1fr;
+    gap:22px;
+    align-items:start;
+  }
+  @media (max-width: 840px){ .layout{grid-template-columns:1fr;} }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:20px;
+  }
+  .panel + .panel{margin-top:20px;}
+
+  .panel-title{
+    font-size:12px;
+    color:var(--text-dim);
+    margin:0 0 16px;
+    padding-bottom:10px;
+    border-bottom:1px solid var(--border);
+  }
+
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    font-size:13px;
+    margin-bottom:6px;
+    color:var(--text);
+  }
+  .field label .unit{
+    color:var(--text-dim);
+    font-family:var(--mono);
+    font-size:12px;
+  }
+  .field input[type="number"]{
+    width:100%;
+    background:var(--bg);
+    border:1px solid var(--border);
+    color:var(--text);
+    font-family:var(--mono);
+    font-size:14px;
+    padding:9px 10px;
+    border-radius:5px;
+    outline:none;
+  }
+  .field input[type="number"]:focus{border-color:var(--amber);}
+  .hint{font-size:11.5px; color:var(--text-dim); margin-top:5px; line-height:1.5;}
+
+  button#run-btn{
+    width:100%;
+    margin-top:6px;
+    background:var(--amber);
+    color:#1A1204;
+    border:none;
+    font-weight:600;
+    font-size:14px;
+    padding:11px 14px;
+    border-radius:6px;
+    cursor:pointer;
+  }
+  button#run-btn:hover{filter:brightness(1.06);}
+  button#run-btn:active{filter:brightness(0.96);}
+
+  .error-msg{
+    color:var(--red);
+    font-size:12.5px;
+    margin-top:10px;
+    display:none;
+  }
+
+  .readouts{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:12px;
+    margin-bottom:20px;
+  }
+  @media (max-width:560px){ .readouts{grid-template-columns:1fr;} }
+  .readout{
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:7px;
+    padding:14px 16px;
+  }
+  .readout .label{font-size:12px; color:var(--text-dim); margin-bottom:6px;}
+  .readout .value{font-family:var(--mono); font-size:20px; font-weight:600;}
+  .readout .value .sub{font-size:13px; color:var(--text-dim); font-weight:400; margin-left:4px;}
+  .readout.accent .value{color:var(--amber);}
+  .readout.good .value{color:var(--green);}
+
+  .chart-block{margin-bottom:20px;}
+  .chart-block:last-child{margin-bottom:0;}
+  .chart-title{font-size:13px; color:var(--text-dim); margin:0 0 4px;}
+  .chart-sub{font-size:12px; color:var(--text-dim); margin:0 0 10px; opacity:0.8;}
+  canvas{width:100%; display:block;}
+
+  .legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px;
+    margin-top:8px;
+    font-size:12px;
+    color:var(--text-dim);
+  }
+  .legend .item{display:flex; align-items:center; gap:6px;}
+  .legend .swatch{width:12px; height:3px; border-radius:2px; display:inline-block;}
+
+  table.data-table{
+    width:100%;
+    border-collapse:collapse;
+    font-family:var(--mono);
+    font-size:12.5px;
+    margin-top:4px;
+  }
+  table.data-table th{
+    text-align:right;
+    color:var(--text-dim);
+    font-weight:500;
+    padding:7px 8px;
+    border-bottom:1px solid var(--border);
+  }
+  table.data-table th:first-child, table.data-table td:first-child{text-align:left;}
+  table.data-table td{
+    text-align:right;
+    padding:6px 8px;
+    border-bottom:1px solid var(--panel-2);
+  }
